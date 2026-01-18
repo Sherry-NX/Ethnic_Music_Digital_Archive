@@ -57,3 +57,19 @@ def test_sorting_tiebreaks() -> None:
     results = retrieve(records, {"emotion": "sad"}, top_k=3, min_score=1)
     ids = [result["id"] for result in results]
     assert ids == ["1", "2", "3"]
+
+
+def test_core_match_filtering() -> None:
+    records = [
+        _make_record(id="HN_04", primary_theme="ritual", secondary_theme="agriculture", tempo="slow"),
+        _make_record(id="HN_02", tempo="slow"),
+    ]
+    query = {
+        "primary_theme": "ritual",
+        "secondary_theme": "agriculture",
+        "tempo": "slow",
+        "imagery_keywords": ["terrace", "rice"],
+    }
+    results = retrieve(records, query, top_k=5, min_score=None)
+    ids = [result["id"] for result in results]
+    assert ids == ["HN_04"]

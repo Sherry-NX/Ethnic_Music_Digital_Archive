@@ -60,7 +60,7 @@ def main() -> None:
     ]
 
     for query in queries:
-        results = retrieve(metadata, query, top_k=5, min_score=1)
+        results = retrieve(metadata, query, top_k=5, min_score=None)
         _print_results(query, results)
 
 

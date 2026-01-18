@@ -162,17 +162,60 @@ def score_record(
     return score, explanation
 
 
+CORE_FIELDS = ["emotion", "primary_theme", "secondary_theme"]
+
+
+def compute_adaptive_min_score(query: Dict[str, Any]) -> int:
+    constraint_fields = [
+        "emotion",
+        "primary_theme",
+        "secondary_theme",
+        "tempo",
+        "vocal_style",
+        "performance_context",
+    ]
+    constraints = 0
+    for field in constraint_fields:
+        value = query.get(field)
+        if value is not None and str(value).strip():
+            constraints += 1
+    keywords = query.get("imagery_keywords") or []
+    constraints += min(len(keywords), 3)
+    if constraints >= 3:
+        return 3
+    if constraints == 2:
+        return 2
+    return 1
+
+
+def record_matches_core(record: Dict[str, Any], query: Dict[str, Any]) -> bool:
+    for field in CORE_FIELDS:
+        query_value = query.get(field)
+        if query_value is None:
+            continue
+        record_value = record.get("norm", {}).get(field, _normalize_text(record.get(field, "")))
+        if record_value and record_value == query_value:
+            return True
+    return False
+
+
 def retrieve(
     metadata: List[Dict[str, Any]],
     query: Dict[str, Any],
     top_k: int = 5,
-    min_score: int = 1,
+    min_score: Optional[int] = 1,
 ) -> List[Dict[str, Any]]:
     """Score all records, filter by min_score and return ranked results."""
     normalized_query = normalize_query(query)
+    if min_score is None:
+        min_score = compute_adaptive_min_score(normalized_query)
     results: List[Dict[str, Any]] = []
+    core_query_present = any(normalized_query.get(field) is not None for field in CORE_FIELDS)
 
     for record in metadata:
+        core_match = record_matches_core(record, normalized_query)
+        if core_query_present and not core_match:
+            continue
         score, breakdown = score_record(record, normalized_query)
         if score < min_score:
             continue
@@ -180,6 +223,7 @@ def retrieve(
             "id": record.get("id", ""),
             "score": score,
             "matched_explanation": breakdown,
+            "core_match": core_match,
         }
         title = record.get("title", "")
         if title:
