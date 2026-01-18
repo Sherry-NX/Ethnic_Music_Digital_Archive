@@ -106,7 +106,7 @@ def parse_nl_query_openai(
     )
 
     schema = {
-        "name": "structured_query",
+        "name": "music_query",
         "schema": {
             "type": "object",
             "properties": {
@@ -129,14 +129,15 @@ def parse_nl_query_openai(
             ],
             "additionalProperties": False,
         },
+        "strict": True,
     }
 
     client = OpenAI(api_key=api_key)
     response = client.responses.create(
         model=model,
         input=[
-            {"role": "system", "content": [{"type": "text", "text": system_text}]},
-            {"role": "user", "content": [{"type": "text", "text": user_text}]},
+            {"role": "system", "content": [{"type": "input_text", "text": system_text}]},
+            {"role": "user", "content": [{"type": "input_text", "text": user_text}]},
         ],
         text={"format": {"type": "json_schema", "json_schema": schema}},
     )
