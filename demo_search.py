@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import sys
+import argparse
 from typing import Any, Dict, List
 
 from retrieval import load_metadata, retrieve
+from llm_parse import parse_nl_query_openai
 
 
 def _format_keywords(keywords: Any) -> str:
@@ -36,8 +37,26 @@ def _print_results(query: Dict[str, Any], results: List[Dict[str, Any]]) -> None
 
 
 def main() -> None:
-    path = sys.argv[1] if len(sys.argv) > 1 else "metadata_template.csv"
+    parser = argparse.ArgumentParser(description="Rule-based retrieval demo")
+    parser.add_argument("metadata_path", nargs="?", default="metadata_template.csv")
+    parser.add_argument("--nl", dest="nl", help="Natural-language query text")
+    parser.add_argument("--model", default="gpt-4.1-mini", help="OpenAI model name")
+    parser.add_argument("--vocab", default="vocab.json", help="Path to vocab.json")
+    parser.add_argument("--debug", action="store_true", help="Enable debug output")
+    args = parser.parse_args()
+
+    path = args.metadata_path
     metadata = load_metadata(path)
+
+    if args.nl:
+        parsed_query = parse_nl_query_openai(
+            args.nl, vocab_path=args.vocab, model=args.model, debug=args.debug
+        )
+        print("NL Query:", args.nl)
+        print("Parsed query:", parsed_query)
+        results = retrieve(metadata, parsed_query, top_k=5, min_score=None)
+        _print_results(parsed_query, results)
+        return
 
     queries = [
         {"emotion": "sad", "primary_theme": "aging", "imagery_keywords": ["time", "regret"]},
