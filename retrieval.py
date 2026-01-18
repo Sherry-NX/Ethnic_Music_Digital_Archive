@@ -219,11 +219,28 @@ def retrieve(
         score, breakdown = score_record(record, normalized_query)
         if score < min_score:
             continue
+        matched_fields = [
+            field
+            for field in [
+                "emotion",
+                "primary_theme",
+                "secondary_theme",
+                "tempo",
+                "vocal_style",
+                "performance_context",
+            ]
+            if breakdown.get(field, {}).get("points", 0) > 0
+        ]
+        matched_keywords = breakdown.get("imagery_keywords", {}).get("matched_keywords", [])
         item: Dict[str, Any] = {
             "id": record.get("id", ""),
             "score": score,
             "matched_explanation": breakdown,
             "core_match": core_match,
+            "primary_theme": record.get("primary_theme", ""),
+            "emotion": record.get("emotion", ""),
+            "matched_fields": matched_fields,
+            "matched_keywords": matched_keywords,
         }
         title = record.get("title", "")
         if title:

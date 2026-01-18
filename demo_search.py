@@ -6,27 +6,12 @@ from typing import Any, Dict, List
 from retrieval import load_metadata, retrieve
 
 
-def _short_explanation(breakdown: Dict[str, Any]) -> str:
-    fields = []
-    for field in [
-        "emotion",
-        "primary_theme",
-        "secondary_theme",
-        "tempo",
-        "vocal_style",
-        "performance_context",
-    ]:
-        if breakdown.get(field, {}).get("points", 0) > 0:
-            fields.append(field)
-    keywords = breakdown.get("imagery_keywords", {}).get("matched_keywords", [])
-    parts = []
-    if fields:
-        parts.append("matched_fields=" + ",".join(fields))
-    if keywords:
-        parts.append("matched_keywords=" + ",".join(keywords))
-    if not parts:
-        parts.append("matched_fields=none")
-    return "; ".join(parts)
+def _format_keywords(keywords: Any) -> str:
+    if not keywords:
+        return ""
+    if isinstance(keywords, list):
+        return ",".join(str(k) for k in keywords)
+    return str(keywords)
 
 
 def _print_results(query: Dict[str, Any], results: List[Dict[str, Any]]) -> None:
@@ -36,10 +21,16 @@ def _print_results(query: Dict[str, Any], results: List[Dict[str, Any]]) -> None
         return
     for result in results:
         confidence = result.get("confidence_level", "") or "blank"
-        explanation = _short_explanation(result["matched_explanation"])
+        matched_fields = result.get("matched_fields", [])
+        matched_keywords = result.get("matched_keywords", [])
+        matched_fields_text = ",".join(matched_fields) if isinstance(matched_fields, list) else str(matched_fields)
+        matched_keywords_text = _format_keywords(matched_keywords)
+        theme = result.get("primary_theme", "")
+        emotion = result.get("emotion", "")
         print(
-            f"  - id={result['id']} score={result['score']} "
-            f"confidence={confidence} | {explanation}"
+            f"{result['id']} | score={result['score']} | conf={confidence} | "
+            f"theme={theme} | emotion={emotion} | matched_fields={matched_fields_text} | "
+            f"matched_keywords={matched_keywords_text}"
         )
     print("")
 
@@ -57,6 +48,8 @@ def main() -> None:
             "tempo": "slow",
             "imagery_keywords": ["terrace", "rice"],
         },
+        {"emotion": "joyful"},
+        {"primary_theme": "agriculture", "imagery_keywords": ["rice_planting", "field"]},
     ]
 
     for query in queries:
