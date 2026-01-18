@@ -106,30 +106,26 @@ def parse_nl_query_openai(
     )
 
     schema = {
-        "name": "music_query",
-        "schema": {
-            "type": "object",
-            "properties": {
-                "emotion": {"type": ["string", "null"]},
-                "primary_theme": {"type": ["string", "null"]},
-                "secondary_theme": {"type": ["string", "null"]},
-                "tempo": {"type": ["string", "null"]},
-                "vocal_style": {"type": ["string", "null"]},
-                "performance_context": {"type": ["string", "null"]},
-                "imagery_keywords": {"type": "array", "items": {"type": "string"}},
-            },
-            "required": [
-                "emotion",
-                "primary_theme",
-                "secondary_theme",
-                "tempo",
-                "vocal_style",
-                "performance_context",
-                "imagery_keywords",
-            ],
-            "additionalProperties": False,
+        "type": "object",
+        "properties": {
+            "emotion": {"type": ["string", "null"]},
+            "primary_theme": {"type": ["string", "null"]},
+            "secondary_theme": {"type": ["string", "null"]},
+            "tempo": {"type": ["string", "null"]},
+            "vocal_style": {"type": ["string", "null"]},
+            "performance_context": {"type": ["string", "null"]},
+            "imagery_keywords": {"type": "array", "items": {"type": "string"}},
         },
-        "strict": True,
+        "required": [
+            "emotion",
+            "primary_theme",
+            "secondary_theme",
+            "tempo",
+            "vocal_style",
+            "performance_context",
+            "imagery_keywords",
+        ],
+        "additionalProperties": False,
     }
 
     client = OpenAI(api_key=api_key)
@@ -139,7 +135,14 @@ def parse_nl_query_openai(
             {"role": "system", "content": [{"type": "input_text", "text": system_text}]},
             {"role": "user", "content": [{"type": "input_text", "text": user_text}]},
         ],
-        text={"format": {"type": "json_schema", "json_schema": schema}},
+        text={
+            "format": {
+                "type": "json_schema",
+                "name": "music_query",
+                "schema": schema,
+                "strict": True,
+            }
+        },
     )
 
     if not getattr(response, "output_text", None):
