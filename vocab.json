@@ -1,0 +1,45 @@
+{
+  "emotion": [
+    "joyful",
+    "sad",
+    "tender",
+    "solemn",
+    "calm",
+    "nostalgic",
+    "bittersweet",
+    "shy"
+  ],
+  "primary_theme": [
+    "childhood",
+    "family",
+    "love",
+    "courtship",
+    "festival",
+    "community",
+    "agriculture",
+    "ritual",
+    "migration",
+    "place_identity",
+    "aging",
+    "wedding",
+    "daily_life"
+  ],
+  "aliases": {
+    "sorrowful": "sad",
+    "melancholy": "sad",
+    "happy": "joyful",
+    "cheerful": "joyful",
+    "homesick": "nostalgic",
+    "serene": "calm",
+    "peaceful": "calm",
+    "shyness": "shy",
+    "farming": "agriculture",
+    "harvest": "agriculture",
+    "new_year": "festival",
+    "ritual_song": "ritual"
+  },
+  "notes": {
+    "purpose": "Controlled vocabulary for consistent metadata labels and future LLM query parsing.",
+    "how_to_extend": "Add new values only if you also update existing metadata and retrieval tests. Prefer aliases over adding near-duplicate emotions."
+  }
+}
