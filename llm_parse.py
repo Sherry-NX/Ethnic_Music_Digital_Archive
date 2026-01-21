@@ -81,9 +81,9 @@ def parse_nl_query_openai(
     debug: bool = False,
 ) -> Dict[str, Any]:
     try:
-        from openai import OpenAI
+        from deepseek import DeepSeekClient
     except Exception as exc:  # pragma: no cover - runtime dependency
-        raise RuntimeError("OpenAI SDK is required. Install with: pip install openai") from exc
+        raise RuntimeError("DeepSeek SDK is required. Install with: pip install deepseek-sdk") from exc
 
     api_key = os.getenv(api_key_env)
     if not api_key:
@@ -130,30 +130,32 @@ def parse_nl_query_openai(
         "additionalProperties": False,
     }
 
-    client = OpenAI(api_key=api_key, base_url=base_url)
-    response = client.responses.create(
+    client = DeepSeekClient(api_key=api_key, base_url=base_url)
+    response = client.chat_completion(
         model=model,
-        input=[
-            {"role": "system", "content": [{"type": "input_text", "text": system_text}]},
-            {"role": "user", "content": [{"type": "input_text", "text": user_text}]},
+        messages=[
+            {"role": "system", "content": system_text},
+            {"role": "user", "content": user_text},
         ],
-        text={
-            "format": {
-                "type": "json_schema",
-                "name": "music_query",
-                "schema": schema,
-                "strict": True,
-            }
-        },
+        temperature=0,
     )
 
-    if not getattr(response, "output_text", None):
-        raise RuntimeError("OpenAI response did not include output_text.")
+    content = None
+    if isinstance(response, dict):
+        content = (
+            response.get("choices", [{}])[0]
+            .get("message", {})
+            .get("content")
+        )
+    else:
+        content = getattr(response.choices[0].message, "content", None)
+    if not content:
+        raise RuntimeError("DeepSeek response did not include message content.")
 
     try:
-        parsed = json.loads(response.output_text)
+        parsed = json.loads(content)
     except json.JSONDecodeError as exc:
-        raise RuntimeError(f"Failed to parse model output as JSON: {response.output_text}") from exc
+        raise RuntimeError(f"Failed to parse model output as JSON: {content}") from exc
 
     projected = project_to_vocab(parsed, vocab)
     if debug:
