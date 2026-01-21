@@ -40,7 +40,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Rule-based retrieval demo")
     parser.add_argument("metadata_path", nargs="?", default="metadata_template.csv")
     parser.add_argument("--nl", dest="nl", help="Natural-language query text")
-    parser.add_argument("--model", default="gpt-4.1-mini", help="OpenAI model name")
+    parser.add_argument("--model", default="deepseek-chat", help="LLM model name")
     parser.add_argument("--vocab", default="vocab.json", help="Path to vocab.json")
     parser.add_argument("--debug", action="store_true", help="Enable debug output")
     args = parser.parse_args()
