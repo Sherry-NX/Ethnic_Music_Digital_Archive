@@ -75,8 +75,9 @@ def project_to_vocab(parsed: Dict[str, Any], vocab: Dict[str, Any]) -> Dict[str,
 def parse_nl_query_openai(
     text: str,
     vocab_path: str = "vocab.json",
-    model: str = "gpt-4.1-mini",
-    api_key_env: str = "OPENAI_API_KEY",
+    model: str = "deepseek-chat",
+    api_key_env: str = "DEEPSEEK_API_KEY",
+    base_url_env: str = "DEEPSEEK_BASE_URL",
     debug: bool = False,
 ) -> Dict[str, Any]:
     try:
@@ -87,6 +88,7 @@ def parse_nl_query_openai(
     api_key = os.getenv(api_key_env)
     if not api_key:
         raise RuntimeError(f"{api_key_env} is not set.")
+    base_url = os.getenv(base_url_env, "https://api.deepseek.com/v1")
 
     vocab = load_vocab(vocab_path)
     allowed_emotions = vocab.get("emotion", [])
@@ -128,7 +130,7 @@ def parse_nl_query_openai(
         "additionalProperties": False,
     }
 
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(api_key=api_key, base_url=base_url)
     response = client.responses.create(
         model=model,
         input=[
