@@ -21,6 +21,16 @@ DEFAULT_METADATA_PATH = DATA_DIR / "metadata" / "metadata_master.csv"
 DEFAULT_VOCAB_PATH = CODEBASE_DIR / "vocab.json"
 DEFAULT_WAV_DIR = DATA_DIR / "audio" / "wav"
 DEFAULT_MP4_DIR = DATA_DIR / "video" / "mp4"
+PARSED_QUERY_FIELDS = [
+    "primary_theme",
+    "secondary_theme",
+    "emotion",
+    "secondary_emotion",
+    "usage_scene",
+    "performance_form",
+    "tempo",
+    "imagery_keywords",
+]
 
 
 @st.cache_data
@@ -109,14 +119,24 @@ def main() -> None:
     mp4_dir = _resolve_input_path(mp4_dir_path_raw, CODEBASE_DIR)
 
     structured_query: Optional[Dict[str, Any]] = None
+    parse_notice: Optional[str] = None
     try:
         if use_llm_parse:
-            structured_query = parse_nl_query_openai(
+            llm_result = parse_nl_query_openai(
                 str(query_text),
                 vocab_path=str(vocab_path),
                 model=model_name,
             )
-            parse_mode = "llm"
+            fallback_reason = llm_result.get("__fallback_reason")
+            structured_query = {field: llm_result.get(field) for field in PARSED_QUERY_FIELDS}
+            if fallback_reason:
+                parse_mode = "rule-fallback"
+                parse_notice = (
+                    "Remote LLM parsing unavailable. Using rule-based fallback. "
+                    "See terminal for detailed logs."
+                )
+            else:
+                parse_mode = "llm"
         else:
             parse_mode = "text-only"
     except Exception as exc:
@@ -137,8 +157,11 @@ def main() -> None:
 
     st.subheader("Parsed Query (Optional)")
     st.caption(f"Parser mode: {parse_mode}")
+    if parse_notice:
+        st.warning(parse_notice)
     if structured_query is not None:
-        st.code(json.dumps(structured_query, ensure_ascii=False, indent=2), language="json")
+        display_query = {field: structured_query.get(field) for field in PARSED_QUERY_FIELDS}
+        st.code(json.dumps(display_query, ensure_ascii=False, indent=2), language="json")
     else:
         st.code("未启用 LLM 结构化解析，使用全文字段匹配。")
 
