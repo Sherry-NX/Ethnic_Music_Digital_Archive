@@ -228,6 +228,21 @@ def resolve_metadata_path(path: Optional[str] = None) -> Path:
     return (CODEBASE_DIR / p).resolve()
 
 
+def normalize_text(value: Any) -> str:
+    """Public wrapper around internal text normalization."""
+    return _normalize_text(value)
+
+
+def tokenize_query(text: str) -> List[str]:
+    """Public wrapper around internal query tokenization."""
+    return _tokenize_query(text)
+
+
+def split_keywords(value: Any) -> List[str]:
+    """Public wrapper around internal keyword splitting."""
+    return _split_keywords(value)
+
+
 def create_search_engine(path: Optional[str] = None) -> MetadataSearchEngine:
     metadata_path = resolve_metadata_path(path)
     return MetadataSearchEngine(repository=CSVMetadataRepository(metadata_path=metadata_path))

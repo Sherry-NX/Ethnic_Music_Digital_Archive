@@ -14,6 +14,7 @@ from search_pipeline import (
     create_search_engine,
     resolve_metadata_path,
 )
+from similarity import find_similar
 
 
 CODEBASE_DIR = Path(__file__).resolve().parent
@@ -601,6 +602,9 @@ def main() -> None:
     results = _rerank_results(results=results, query_text=str(query_text), structured_query=structured_query)
     results = results[: int(top_k)]
 
+    # Load full catalogue once for item-to-item similarity lookups.
+    all_records = create_search_engine(str(metadata_path)).load()
+
     if parse_notice:
         st.sidebar.caption(f"Parsing status: {parse_notice}")
 
@@ -709,6 +713,28 @@ def main() -> None:
                     for field in SEARCH_FIELDS:
                         if meta.get(field):
                             st.write(f"{field}: {meta.get(field)}")
+
+            # -- Similar Tracks (item-to-item recommendation) --
+            shown_ids = {str(r.get("id", "")) for r in results}
+            similar_tracks = find_similar(
+                item_id,
+                all_records,
+                top_k=3,
+                exclude_ids=shown_ids - {item_id},
+            )
+            if similar_tracks:
+                with st.expander("Similar tracks"):
+                    for sim in similar_tracks:
+                        sim_meta = sim["record"]
+                        sim_title = sim_meta.get("title") or sim_meta.get("track_id", "")
+                        sim_ethnic = sim_meta.get("ethnic_group", "")
+                        sim_score = sim["similarity_score"]
+                        sim_explain = sim["explanation"]
+                        st.markdown(
+                            f"**{sim_title}**"
+                            + (f"  ({sim_ethnic})" if sim_ethnic else "")
+                        )
+                        st.caption(f"{sim_explain}  (similarity: {sim_score})")
 
             st.divider()
 
