@@ -1,0 +1,8 @@
+id,primary_theme,secondary_theme,emotion,tempo,vocal_style,performance_context,imagery_keywords,confidence_level
+HN_01,childhood,nature,joyful,fast,group singing,children's folk song / daily life,"loach,water,field,play",high
+HN_03,family,gratitude,solemn,slow,solo,moral / narrative song,"parents,upbringing,time",high
+HN_02,childhood,family,tender,slow,female solo,lullaby,"baby,mother,cradle",high
+HN_04,ritual,agriculture,solemn,slow,group chanting,ritual ceremony,"terrace,rice,ancestor,earth",medium
+HN_11,courtship,love,joyful,moderate,solo or antiphonal,courtship / social singing,"meeting,spring,voice",medium
+HN_05,festival,community,joyful,fast,group singing,New Year festival (Gatangpa),"celebration,dance,community",high
+HN_13,aging,loss,sad,slow,solo,narrative / reflective song,"time,regret,marriage,youth",high

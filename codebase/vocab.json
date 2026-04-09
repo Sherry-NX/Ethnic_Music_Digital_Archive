@@ -1,0 +1,151 @@
+{
+  "fields": {
+    "primary_theme": [
+      "agriculture",
+      "community",
+      "courtship",
+      "migration",
+      "nature",
+      "ritual",
+      "storytelling"
+    ],
+    "secondary_theme": [
+      "community",
+      "courtship",
+      "festival",
+      "migration",
+      "nature",
+      "spirituality",
+      "storytelling"
+    ],
+    "emotion": [
+      "energetic",
+      "joyful",
+      "melancholic",
+      "peaceful",
+      "solemn",
+      "yearning"
+    ],
+    "secondary_emotion": [
+      "bittersweet",
+      "energetic",
+      "joyful",
+      "melancholic",
+      "peaceful",
+      "solemn",
+      "yearning"
+    ],
+    "usage_scene": [
+      "ceremony",
+      "community_gathering",
+      "festival",
+      "labor"
+    ],
+    "performance_form": [
+      "antiphonal",
+      "choral",
+      "ensemble",
+      "instrumental_vocal",
+      "polyphonic",
+      "solo"
+    ],
+    "tempo": [
+      "fast",
+      "medium",
+      "slow"
+    ]
+  },
+  "aliases": {
+    "primary_theme": {
+      "love": "courtship",
+      "romance": "courtship",
+      "爱情": "courtship",
+      "恋爱": "courtship",
+      "恋歌": "courtship",
+      "farming": "agriculture",
+      "plowing": "agriculture",
+      "harvest": "agriculture",
+      "耕田": "agriculture",
+      "农耕": "agriculture",
+      "丰收": "agriculture",
+      "migration": "migration",
+      "ritual": "ritual"
+    },
+    "secondary_theme": {
+      "festival": "festival",
+      "celebration": "festival",
+      "community": "community",
+      "spiritual": "spirituality",
+      "spirituality": "spirituality",
+      "庆典": "festival"
+    },
+    "emotion": {
+      "sad": "melancholic",
+      "sorrowful": "melancholic",
+      "melancholy": "melancholic",
+      "伤感": "melancholic",
+      "忧伤": "melancholic",
+      "solemn": "solemn",
+      "sacred": "solemn",
+      "庄重": "solemn",
+      "神圣": "solemn",
+      "longing": "yearning",
+      "yearning": "yearning",
+      "missing someone": "yearning",
+      "思念": "yearning",
+      "想念": "yearning",
+      "相思": "yearning"
+    },
+    "secondary_emotion": {
+      "sad": "melancholic",
+      "sorrowful": "melancholic",
+      "melancholy": "melancholic",
+      "longing": "yearning",
+      "yearning": "yearning",
+      "思念": "yearning",
+      "想念": "yearning",
+      "相思": "yearning",
+      "solemn": "solemn",
+      "sacred": "solemn"
+    },
+    "usage_scene": {
+      "ritual": "ceremony",
+      "ceremony": "ceremony",
+      "仪式": "ceremony",
+      "祭祀": "ceremony",
+      "farming": "labor",
+      "plowing": "labor",
+      "harvest": "labor",
+      "耕田": "labor",
+      "农耕": "labor",
+      "丰收": "labor",
+      "joyful celebration": "festival",
+      "festive": "festival",
+      "celebration": "festival",
+      "喜庆": "festival",
+      "节庆": "festival"
+    },
+    "performance_form": {
+      "duet": "antiphonal",
+      "antiphonal singing": "antiphonal",
+      "call-and-response": "antiphonal",
+      "duet singing": "antiphonal",
+      "对唱": "antiphonal",
+      "轮唱": "antiphonal",
+      "应答": "antiphonal"
+    },
+    "tempo": {
+      "slow": "slow",
+      "moderate": "medium",
+      "medium": "medium",
+      "fast": "fast",
+      "慢": "slow",
+      "中速": "medium",
+      "快": "fast"
+    }
+  },
+  "notes": {
+    "purpose": "Controlled vocabulary aligned with metadata_master schema for LLM query parsing.",
+    "how_to_extend": "Update fields and aliases together with metadata/search tests."
+  }
+}
