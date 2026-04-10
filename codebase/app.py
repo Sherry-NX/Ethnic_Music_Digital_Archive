@@ -39,6 +39,7 @@ SLOT_FIELDS = {
     "performance_form": ["performance_form", "retrieval_notes", "cultural_context"],
     "theme": ["primary_theme", "secondary_theme", "retrieval_notes", "cultural_context"],
     "suitability": ["usage_scene", "retrieval_notes", "cultural_context"],
+    "imagery": ["imagery_keywords"],
 }
 SLOT_IMPORTANCE = {
     "emotion": 1.0,
@@ -46,6 +47,7 @@ SLOT_IMPORTANCE = {
     "performance_form": 1.1,
     "theme": 1.0,
     "suitability": 1.3,
+    "imagery": 0.9,
 }
 SLOT_KEYWORDS = {
     "usage_scene": [
@@ -360,6 +362,15 @@ def _collect_query_slots(query_text: str, structured_query: Optional[Dict[str, A
                 elif isinstance(value, list):
                     query_slots[slot].update([str(v).strip().lower() for v in value if str(v).strip()])
 
+        # Collect raw imagery keywords from structured query; they will be
+        # deduplicated against other slots below.
+        imagery_kw = structured_query.get("imagery_keywords")
+        if isinstance(imagery_kw, list):
+            for kw in imagery_kw:
+                v = str(kw).strip().lower()
+                if v:
+                    query_slots["imagery"].add(v)
+
     for slot, keywords in SLOT_KEYWORDS.items():
         for kw in keywords:
             if kw in text:
@@ -369,6 +380,19 @@ def _collect_query_slots(query_text: str, structured_query: Optional[Dict[str, A
 
     if any(x in text for x in ["用来", "当作", "适合", "suitable", "for "]):
         query_slots["suitability"].add("suitability")
+
+    # Add query tokens not yet captured by any slot as imagery candidates.
+    non_imagery_terms: Set[str] = set()
+    for slot, terms in query_slots.items():
+        if slot != "imagery":
+            non_imagery_terms.update(terms)
+    for token in re.findall(r"[a-z0-9_]+|[\u4e00-\u9fff]{2,}", text):
+        if len(token) >= 2 and token not in non_imagery_terms:
+            query_slots["imagery"].add(token)
+
+    # Remove imagery terms that are already covered by a more specific slot
+    # so they don't create a phantom unsatisfied condition.
+    query_slots["imagery"] -= non_imagery_terms
 
     return query_slots
 
@@ -449,6 +473,19 @@ def _rerank_results(
                 strong_bucket = False
 
         segment = "best" if strong_bucket else "related"
+
+        # Compute explanation strength here so segment and strength stay
+        # consistent.  If the explanation says "Exploratory match", the
+        # result must not sit in the "best" segment.
+        _strength, _, _ = _build_match_explanation(
+            meta=meta,
+            query_text=query_text,
+            structured_query=structured_query,
+            matched_fields=result.get("matched_fields", []),
+            reasons=result.get("match_reasons", []),
+        )
+        if _strength == "Exploratory match":
+            segment = "related"
 
         enriched = dict(result)
         enriched["_slot_hits"] = slot_hits
@@ -618,6 +655,13 @@ def main() -> None:
         else:
             st.code("LLM parsing is disabled. Full-text field matching is used.")
 
+        # Show resolved query slots so the developer can see what the
+        # reranker thinks the query is asking for.
+        debug_slots = _collect_query_slots(query_text=str(query_text), structured_query=structured_query)
+        active_debug_slots = {k: sorted(v) for k, v in debug_slots.items() if v}
+        st.caption("Active query slots (used by reranker):")
+        st.code(json.dumps(active_debug_slots, ensure_ascii=False, indent=2), language="json")
+
     st.subheader("Results")
     if not results:
         st.info("No results found. Try broader keywords, related themes, or a lower minimum score.")
@@ -627,13 +671,13 @@ def main() -> None:
     related_results = [r for r in results if r.get("_segment") != "best"]
 
     if not best_results and related_results:
-        st.caption("No strong match found for all query conditions. Showing the closest related results below.")
+        st.caption("No strong match found for all query conditions. Showing exploratory results below.")
 
     sections: List[Tuple[str, List[Dict[str, Any]]]] = []
     if best_results:
         sections.append(("Best matches", best_results))
     if related_results:
-        sections.append(("Related / exploratory matches", related_results))
+        sections.append(("Exploratory matches", related_results))
 
     rank_index = 1
     for section_title, section_items in sections:
@@ -665,8 +709,7 @@ def main() -> None:
             if tags:
                 st.markdown(" ".join([f"`{tag}`" for tag in tags]))
             st.markdown("**Why it matches**")
-            st.caption(f"EN: {explanation_en}")
-            st.caption(f"中文：{explanation_zh}")
+            st.caption(explanation_en)
             st.caption(evidence_line)
 
             audio_path = _resolve_media_path(
@@ -704,8 +747,12 @@ def main() -> None:
                         "rerank: "
                         f"adjusted={result.get('_adjusted_score')} | "
                         f"coverage={result.get('_weighted_coverage')} | "
-                        f"slot_hits={result.get('_slot_hits')}/{result.get('_active_slots')}"
+                        f"slot_hits={result.get('_slot_hits')}/{result.get('_active_slots')} | "
+                        f"segment={result.get('_segment')}"
                     )
+                    slot_hit_map = result.get("_slot_hit_map", {})
+                    if slot_hit_map:
+                        st.write(f"slot_hit_map: {slot_hit_map}")
                     if reasons:
                         st.write("Internal reasons:")
                         for reason in reasons:
